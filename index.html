@@ -57,7 +57,7 @@
                         lastDetection = timestamp;
 
                         barcodeDetector.detect(video).then((barcodes) => {
-                            if (barcodes.length === 1) {
+                            if (barcodes.length >= 1) {
                                 targetUrl.searchParams.append(targetQuery, barcodes[0].rawValue);
                                 window.location.href = targetUrl.href;
                             }
