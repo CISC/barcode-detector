@@ -64,9 +64,9 @@
                         }).catch((e) => {
                             console.error(e);
                         });
-
-                        requestAnimationFrame(detectionLoop);
                     }
+
+                    requestAnimationFrame(detectionLoop);
                 })(performance.now());
             }).catch((e) => {
                 console.error(e);
