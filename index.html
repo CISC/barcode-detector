@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Barcode Detector</title>
+        <style type="text/css">
+            html {
+              width: 100%;
+              height: 100%;
+            }
+            body {
+              height: 100%;
+              margin: 0;
+            }
+            video {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <video id="viewport" autoplay></video>
+        <script>
+            const bacodeDetector = new BarcodeDetector({formats: ['upc_a', 'ean_13', 'code_128']});
+            const video = document.getElementById('viewport');
+            const originUrl = new URL(window.location.href);
+            const targetUrl = new URL('https://www.ean-search.org/');
+
+            function validate(str, def=null, matcher=/^[A-Za-z0-9\.]+$/) {
+                if (str && matcher.test(str)) {
+                    return str;
+                }
+
+                return def;
+            }
+
+            let targetQuery = validate(originUrl.searchParams.get('q'), 'q');
+
+            if (originUrl.searchParams.has('s') && originUrl.searchParams.get('s') === '0') {
+                targetUrl.protocol = 'http:';
+            }
+            targetUrl.hostname = validate(originUrl.searchParams.get('h'), targetUrl.hostname);
+            targetUrl.port = validate(originUrl.searchParams.get('p'), targetUrl.port, /^[0-9]+$/);
+            targetUrl.pathname = validate(originUrl.searchParams.get('n'), targetUrl.pathname, /^[A-Za-z0-9\.\/]+$/);
+
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: 1920,
+                    facingMode: 'environment'
+                }
+            }).then((mediaStream) => {
+                video.srcObject = mediaStream;
+
+                let lastDetection = performance.now() - 200;
+                (function detectionLoop(timestamp) {
+                    if (timestamp - lastDetection >= 200) {
+                        lastDetection = timestamp;
+
+                        barcodeDetector.detect(video).then((barcodes) => {
+                            if (barcodes.length === 1) {
+                                targetUrl.searchParams.append(targetQuery, barcodes[0].rawValue);
+                                window.location.href = targetUrl.href;
+                            }
+                        }).catch((e) => {
+                            console.error(e);
+                        });
+
+                        requestAnimationFrame(detectionLoop);
+                    }
+                })();
+            }).catch((e) => {
+                console.error(e);
+            });
+        </script>
+    </body>
+</html>
