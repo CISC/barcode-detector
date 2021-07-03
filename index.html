@@ -21,7 +21,7 @@
     <body>
         <video id="viewport" autoplay></video>
         <script>
-            const bacodeDetector = new BarcodeDetector({formats: ['upc_a', 'ean_13', 'code_128']});
+            const barcodeDetector = new BarcodeDetector({formats: ['upc_a', 'ean_13', 'code_128']});
             const video = document.getElementById('viewport');
             const originUrl = new URL(window.location.href);
             const targetUrl = new URL('https://www.ean-search.org/');
