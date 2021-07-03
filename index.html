@@ -67,7 +67,7 @@
 
                         requestAnimationFrame(detectionLoop);
                     }
-                })();
+                })(performance.now());
             }).catch((e) => {
                 console.error(e);
             });
