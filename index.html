@@ -17,7 +17,7 @@
               margin: 0;
             }
             #camera-select {
-                float: right;
+              float: right;
             }
         </style>
     </head>
@@ -53,7 +53,7 @@
                 }
 
                 navigator.mediaDevices.getUserMedia(constraints).then((mediaStream) => {
-                    const cameraId = mediaStream.getVideoTracks()[0].id;
+                    const cameraId = mediaStream.getVideoTracks()[0].getSettings().deviceId;
 
                     video.srcObject = mediaStream;
 
