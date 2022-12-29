@@ -34,13 +34,22 @@
             function selectCamera(id) {
                 const constraints = {
                     video: {
-                        width: 1920,
-                        facingMode: 'environment'
+                        width: 1920
                     }
                 };
 
                 if (id) {
                     constraints.video.deviceId = id;
+                } else {
+                    constraints.video.facingMode = 'environment';
+                }
+
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach((track) => {
+                        track.stop();
+                    });
+
+                    video.srcObject = null;
                 }
 
                 navigator.mediaDevices.getUserMedia(constraints).then((mediaStream) => {
