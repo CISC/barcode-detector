@@ -16,15 +16,64 @@
               height: 100%;
               margin: 0;
             }
+            #camera-select {
+                float: right;
+            }
         </style>
     </head>
     <body>
+        <select name="camera" id="camera-select"></select>
         <video id="viewport" autoplay></video>
         <script>
             const barcodeDetector = new BarcodeDetector({formats: ['upc_a', 'ean_13', 'code_128']});
+            const camselect = document.getElementById('camera-select');
             const video = document.getElementById('viewport');
             const originUrl = new URL(window.location.href);
             const targetUrl = new URL('https://www.ean-search.org/');
+
+            function selectCamera(id) {
+                const constraints = {
+                    video: {
+                        width: 1920,
+                        facingMode: 'environment'
+                    }
+                };
+
+                if (id) {
+                    constraints.video.deviceId = id;
+                }
+
+                navigator.mediaDevices.getUserMedia(constraints).then((mediaStream) => {
+                    const cameraId = mediaStream.getVideoTracks()[0].id;
+
+                    video.srcObject = mediaStream;
+
+                    while (camselect.options.length > 0) {
+                        camselect.remove(0);
+                    }
+
+                    navigator.mediaDevices.enumerateDevices().then((devices) => {
+                        devices.forEach((device) => {
+                            if (device.kind === 'videoinput') {
+                                const cam = document.createElement('option');
+
+                                cam.value = device.deviceId;
+                                cam.text = device.label;
+
+                                if (device.deviceId === cameraId) {
+                                    cam.selected = true;
+                                }
+
+                                camselect.add(cam);
+                            }
+                        })
+                    }).catch((e) => {
+                        console.error(e);
+                    });
+                }).catch((e) => {
+                    console.error(e);
+                });
+            }
 
             function validate(str, def=null, matcher=/^[A-Za-z0-9\.]+$/) {
                 if (str && matcher.test(str)) {
@@ -43,34 +92,33 @@
             targetUrl.port = validate(originUrl.searchParams.get('p'), targetUrl.port, /^[0-9]+$/);
             targetUrl.pathname = validate(originUrl.searchParams.get('n'), targetUrl.pathname, /^[A-Za-z0-9\.\/]+$/);
 
-            navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: 1920,
-                    facingMode: 'environment'
+            camselect.addEventListener('change', (event) => {
+                const options = event.target.selectedOptions;
+
+                if (options.length > 0) {
+                    selectCamera(options[0].value);
                 }
-            }).then((mediaStream) => {
-                video.srcObject = mediaStream;
-
-                let lastDetection = performance.now() - 200;
-                (function detectionLoop(timestamp) {
-                    if (timestamp - lastDetection >= 200) {
-                        lastDetection = timestamp;
-
-                        barcodeDetector.detect(video).then((barcodes) => {
-                            if (barcodes.length >= 1) {
-                                targetUrl.searchParams.append(targetQuery, barcodes[0].rawValue);
-                                window.location.href = targetUrl.href;
-                            }
-                        }).catch((e) => {
-                            console.error(e);
-                        });
-                    }
-
-                    requestAnimationFrame(detectionLoop);
-                })(performance.now());
-            }).catch((e) => {
-                console.error(e);
             });
+
+            selectCamera();
+
+            let lastDetection = performance.now() - 200;
+            (function detectionLoop(timestamp) {
+                if (video.srcObject && timestamp - lastDetection >= 200) {
+                    lastDetection = timestamp;
+
+                    barcodeDetector.detect(video).then((barcodes) => {
+                        if (barcodes.length >= 1) {
+                            targetUrl.searchParams.append(targetQuery, barcodes[0].rawValue);
+                            window.location.href = targetUrl.href;
+                        }
+                    }).catch((e) => {
+                        console.error(e);
+                    });
+                }
+
+                requestAnimationFrame(detectionLoop);
+            })(performance.now());
         </script>
     </body>
 </html>
