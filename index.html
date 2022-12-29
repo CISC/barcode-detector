@@ -57,6 +57,12 @@
 
                     video.srcObject = mediaStream;
 
+                    try {
+                        localStorage.setItem('selected_camera', cameraId);
+                    } catch {
+                        localStorage.clear();
+                    }
+
                     while (camselect.options.length > 0) {
                         camselect.remove(0);
                     }
@@ -109,7 +115,7 @@
                 }
             });
 
-            selectCamera();
+            selectCamera(localStorage.getItem('selected_camera'));
 
             let lastDetection = performance.now() - 200;
             (function detectionLoop(timestamp) {
