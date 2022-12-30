@@ -59,7 +59,9 @@
                     video.srcObject = mediaStream;
 
                     try {
-                        localStorage.setItem('selected_camera', cameraId);
+                        if (localStorage.getItem('selected_camera') !== cameraId) {
+                            localStorage.setItem('selected_camera', cameraId);
+                        }
                     } catch {
                         localStorage.clear();
                     }
@@ -88,6 +90,7 @@
                     });
                 }).catch((e) => {
                     console.error(e);
+                    localStorage.removeItem('selected_camera');
                 });
             }
 
